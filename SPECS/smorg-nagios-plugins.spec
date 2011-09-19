@@ -78,14 +78,15 @@ rm -rf $RPM_BUILD_ROOT
 make AM_INSTALL_PROGRAM_FLAGS="" DESTDIR=${RPM_BUILD_ROOT} install
 install -d ${RPM_BUILD_ROOT}/etc/nagios
 install -m 664 command.cfg ${RPM_BUILD_ROOT}/etc/nagios
-%find_lang %{name}
+#%find_lang %{name}
+%find_lang nagios-plugins
 
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 
-%files -f %{name}.lang
+%files -f nagios-plugins.lang
 %defattr(-,root,root)
 %config(missingok,noreplace) /etc/nagios/command.cfg
 %doc CODING COPYING FAQ INSTALL LEGAL README REQUIREMENTS SUPPORT THANKS
