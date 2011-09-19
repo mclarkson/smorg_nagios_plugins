@@ -1,4 +1,4 @@
-Name: nagios-plugins
+Name: smorg-nagios-plugins
 Version: 1.4.14
 Release: 2
 Summary: Host/service/network monitoring program plugins for Nagios
