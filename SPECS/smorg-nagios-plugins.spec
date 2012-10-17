@@ -1,6 +1,6 @@
 Name: smorg-nagios-plugins
-Version: 1.4.14
-Release: 2
+Version: 1.4.16
+Release: 1
 Summary: Host/service/network monitoring program plugins for Nagios
 
 Group: Applications/System
@@ -10,9 +10,9 @@ Source0: http://dl.sf.net/sourceforge/nagiosplug/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Prefix: %{_prefix}/lib64/nagios/plugins
-Packager: Darrin Wilkinson <darrin.wilkinson@nokia.com>
-Vendor: Nokia, Advanced Operations, Instrumentation & Tools
-Summary: Nagios Plugins for Nokia x86_64 Linux Servers
+Packager: Mark Clarkson <mark.clarkson@smorg.co.uk>
+Vendor: Smorg
+Summary: Nagios Plugins for x86_64 Linux Servers
 
 Provides: smorg-nagios-plugins
 Conflicts: nagios-plugins
@@ -98,6 +98,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_exec_prefix}/lib64/nagios/plugins
 
 %changelog
+* Wed Oct 17 2012 Mark Clarkson <mark.clarkson@smorg.co.uk>
+- Updated from upstream.
 * Mon May 23 2005 Sean Finney <seanius@seanius.net> - cvs head
 - just include the nagios plugins directory, which will automatically include
   all generated plugins (which keeps the build from failing on systems that
