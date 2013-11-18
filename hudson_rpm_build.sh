@@ -2,7 +2,7 @@
 
 # Script to build rpms from hudson
 
-#RELEASE="2"
+##RELEASE="2"
 PWD=`pwd`
 BASE=$PWD
 
