@@ -21,7 +21,7 @@ Obsoletes: nagios-plugins-custom nagios-plugins-extras
 AutoReq: no
 Requires: perl, perl(Net::SNMP), net-snmp
 
-BuildRequires: gcc-c++, gettext, radiusclient-devel, python
+BuildRequires: gcc-c++, gettext, radiusclient-ng-devel, python
 BuildRequires: bind-utils, ntp, samba-client, openssh-clients
 BuildRequires: openldap-devel, mysql-devel, postgresql-devel
 BuildRequires: perl(Net::SNMP)
