@@ -1,7 +1,7 @@
 smorg_nagios_plugins
 ====================
 
-Build files for nagios-plugins version 1.4.16.
+Build files for nagios-plugins version 2.1.1.
 
 Build:
 ```
