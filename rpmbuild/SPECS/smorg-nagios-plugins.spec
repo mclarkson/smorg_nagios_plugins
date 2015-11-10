@@ -7,7 +7,7 @@
 	%define _prefix /opt/nagios
 #	%define _defaultdocdir %{_datadir}/doc
 %else
-	%define _libexecdir %{_exec_prefix}/lib/nagios/plugins
+	%define _libexecdir %{_exec_prefix}/lib64/nagios/plugins
 %endif
 %define _sysconfdir /etc/nagios
 
@@ -32,7 +32,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %if %{isaix}
 Prefix: %{_prefix}
 %else
-Prefix: %{_prefix}/lib/nagios/plugins
+Prefix: %{_prefix}/lib64/nagios/plugins
 %endif
 Packager: Karl DeBisschop <kdebisschop@users.sourceforge.net>
 Vendor: Nagios Plugin Development Group
