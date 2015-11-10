@@ -1,48 +1,105 @@
+# Macros
+%define isaix %(test "`uname -s`" = "AIX" && echo "1" || echo "0")
+%define islinux %(test "`uname -s`" = "Linux" && echo "1" || echo "0")
+%define isredhatfamily %(test -f /etc/redhat-release && echo "1" || echo "0")
+
+%if %{isaix}
+	%define _prefix /opt/nagios
+#	%define _defaultdocdir %{_datadir}/doc
+%else
+	%define _libexecdir %{_exec_prefix}/lib/nagios/plugins
+%endif
+%define _sysconfdir /etc/nagios
+
+%define npusr nagios
+%define nphome /opt/nagios
+%define npgrp nagios
+%define lname nagios-plugins
+
 Name: smorg-nagios-plugins
-Version: 1.4.16
+Version: 2.1.1
 Release: 1
 Summary: Host/service/network monitoring program plugins for Nagios
 
 Group: Applications/System
 License: GPL
-URL: http://nagiosplug.sourceforge.net/
-Source0: http://dl.sf.net/sourceforge/nagiosplug/%{name}-%{version}.tar.gz
+URL: https://www.nagios-plugins.org/
+Source0: https://www.nagios-plugins.org/download/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Prefix: %{_prefix}/lib64/nagios/plugins
-Packager: Mark Clarkson <mark.clarkson@smorg.co.uk>
-Vendor: Smorg
-Summary: Nagios Plugins for x86_64 Linux Servers
+%define npdir %{_builddir}/%{name}-%{version}
 
-Provides: smorg-nagios-plugins
-Conflicts: nagios-plugins
+%if %{isaix}
+Prefix: %{_prefix}
+%else
+Prefix: %{_prefix}/lib/nagios/plugins
+%endif
+Packager: Karl DeBisschop <kdebisschop@users.sourceforge.net>
+Vendor: Nagios Plugin Development Group
+Provides: nagios-plugins
+
 %{!?custom:%global custom 0}
 Obsoletes: nagios-plugins-custom nagios-plugins-extras
-AutoReq: no
-Requires: perl, perl(Net::SNMP), net-snmp
-
-BuildRequires: gcc-c++, gettext, radiusclient-ng-devel, python
-BuildRequires: bind-utils, ntp, samba-client, openssh-clients
-BuildRequires: openldap-devel, mysql-devel, postgresql-devel
-BuildRequires: perl(Net::SNMP)
 
 
 # Requires
+%if %{isaix}
+Requires:	fping 
+Requires:	gawk
+Requires:	net-snmp 
+Requires:	net-snmp-perl 
+Requires:	net-snmp-utils
+Requires:	openldap
+Requires:	openssl
+Requires:	perl
+Requires:	python
+Requires:	openssl
+BuildRequires:	fping 
+BuildRequires:	gawk
+BuildRequires:	net-snmp 
+BuildRequires:	net-snmp-perl 
+BuildRequires:	net-snmp-utils
+BuildRequires:	openldap-devel
+%endif
+%if %{isredhatfamily}
+Requires:	bind-utils
+Requires:	coreutils
+Requires:	fping 
+Requires:	gawk
+Requires:	grep
+Requires:	iputils
+Requires:	mysql
+Requires:	net-snmp-utils
+Requires:	ntp
+Requires:	openldap
+Requires:	openssl
+Requires:	openssh-clients
+Requires:	perl
+Requires:	postgresql-libs
+Requires:	procps
+Requires:	python
+Requires:	samba-client
+Requires:	shadow-utils
+Requires:	traceroute
+Requires:	/usr/bin/mailq
+BuildRequires:	bind-utils
+BuildRequires:	coreutils
+BuildRequires:	iputils
+BuildRequires:	mysql-devel
+BuildRequires:	net-snmp-utils
+BuildRequires:	net-tools
+BuildRequires:	ntp
+BuildRequires:	openldap-devel
+BuildRequires:	openssh-clients
+BuildRequires:	openssl-devel
+BuildRequires:	postgresql-devel
+BuildRequires:	procps
+BuildRequires:	samba-client
+BuildRequires:	/usr/bin/mailq
+%endif
 
 
 %description
-
-This package contains the basic plugins necessary for use with the
-Nagios package. This package should install cleanly on almost any
-RPM-based system.
-
-But you may need additional packages. Depending on what plugins you
-use, the following packages may be required:
-
-    bind-utils, mysql, net-snmp-utils, ntp, openldap,
-    openssh-clients, openssl, postgresql-libs
-    qstat, radiusclient, samba-client, sendmail
-
 
 Nagios is a program that will monitor hosts and services on your
 network, and to email or page you when a problem arises or is
@@ -58,48 +115,84 @@ contains those plugins.
 
 
 %build
-./configure \
+%{?isaix: MAKE=gmake} ./configure \
 --prefix=%{_prefix} \
 --exec-prefix=%{_exec_prefix} \
---libexecdir=%{_exec_prefix}/lib64/nagios/plugins \
---sysconfdir=%{_sysconfdir}/nagios \
+--libexecdir=%{_libexecdir} \
+--sysconfdir=%{_sysconfdir} \
 --datadir=%{_datadir} \
---with-cgiurl=/nagios/cgi-bin \
---enable-extra-opts \
---with-snmpget-command=/usr/bin/snmpget \
---with-snmpgetnext-command=/usr/bin/snmpgetnext \
---with-qstat-command=/usr/bin/qstat \
---with-fping-command=/usr/sbin/fping 
+--with-cgiurl=/nagios/cgi-bin
+ls -1 %{npdir}/plugins > %{npdir}/ls-plugins-before
+ls -1 %{npdir}/plugins-root > %{npdir}/ls-plugins-root-before
+ls -1 %{npdir}/plugins-scripts > %{npdir}/ls-plugins-scripts-before
 make %{?_smp_mflags}
+ls -1 %{npdir}/plugins > %{npdir}/ls-plugins-after
+ls -1 %{npdir}/plugins-root > %{npdir}/ls-plugins-root-after
+ls -1 %{npdir}/plugins-scripts > %{npdir}/ls-plugins-scripts-after
 
+%pre
+# Create `nagios' group on the system if necessary
+%if %{isaix}
+lsgroup %{npgrp} > /dev/null 2> /dev/null
+if [ $? -eq 2 ] ; then
+	mkgroup %{npgrp} || %nnmmsg Unexpected error adding group "%{npgrp}". Aborting install process.
+fi
+%endif
+%if %{islinux}
+getent group %{npgrp} > /dev/null 2> /dev/null
+if [ $? -ne 0 ] ; then
+	groupadd %{npgrp} || %nnmmsg Unexpected error adding group "%{npgrp}". Aborting install process.
+fi
+%endif
+
+# Create `nagios' user on the system if necessary
+%if %{isaix}
+lsuser %{npusr} > /dev/null 2> /dev/null
+if [ $? -eq 2 ] ; then
+	useradd -d %{nphome} -c "%{npusr}" -g %{npgrp} %{npusr} || \
+		%nnmmsg Unexpected error adding user "%{npusr}". Aborting install process.
+fi
+%endif
+%if %{islinux}
+getent passwd %{npusr} > /dev/null 2> /dev/null
+if [ $? -ne 0 ] ; then
+	useradd -r -d %{nphome} -c "%{npusr}" -g %{npgrp} %{npusr} || \
+		%nnmmsg Unexpected error adding user "%{npusr}". Aborting install process.
+fi
+%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make AM_INSTALL_PROGRAM_FLAGS="" DESTDIR=${RPM_BUILD_ROOT} install
-install -d ${RPM_BUILD_ROOT}/etc/nagios
-install -m 664 command.cfg ${RPM_BUILD_ROOT}/etc/nagios
-#%find_lang %{name}
-%find_lang nagios-plugins
+%find_lang %{lname}
+echo "%defattr(755,%{npusr},%{npgrp})" >> %{name}.lang
+comm -13 %{npdir}/ls-plugins-before %{npdir}/ls-plugins-after | egrep -v "\.o$|^\." | gawk -v libexecdir=%{_libexecdir} '{printf( "%s/%s\n", libexecdir, $0);}' >> %{name}.lang
+echo "%defattr(755,root,root)" >> %{name}.lang
+comm -13 %{npdir}/ls-plugins-root-before %{npdir}/ls-plugins-root-after | egrep -v "\.o$|^\." | gawk -v libexecdir=%{_libexecdir} '{printf( "%s/%s\n", libexecdir, $0);}' >> %{name}.lang
+echo "%defattr(755,%{npusr},%{npgrp})" >> %{name}.lang
+comm -13 %{npdir}/ls-plugins-scripts-before %{npdir}/ls-plugins-scripts-after | egrep -v "\.o$|^\." | gawk -v libexecdir=%{_libexecdir} '{printf( "%s/%s\n", libexecdir, $0);}' >> %{name}.lang
+echo "%{_libexecdir}/utils.pm" >> %{name}.lang
+echo "%{_libexecdir}/utils.sh" >> %{name}.lang
+echo "%{_libexecdir}/check_ldaps" >> %{name}.lang
 
+sed -i '/libnpcommon/d' %{name}.lang
+sed -i '/nagios-plugins.mo/d' %{name}.lang
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 
-%files -f nagios-plugins.lang
-%defattr(-,root,root)
-%config(missingok,noreplace) /etc/nagios/command.cfg
+%files -f %{name}.lang
+#%config(missingok,noreplace) %{_sysconfdir}/command.cfg
 %doc CODING COPYING FAQ INSTALL LEGAL README REQUIREMENTS SUPPORT THANKS
-%doc ChangeLog command.cfg
-%defattr(775,root,root)
-%dir %{_exec_prefix}/lib64/nagios/plugins
+#%doc ChangeLog command.cfg
+%doc ChangeLog
+%if ! %{isaix}
 %{_datadir}/locale/de/LC_MESSAGES/nagios-plugins.mo
 %{_datadir}/locale/fr/LC_MESSAGES/nagios-plugins.mo
-%{_exec_prefix}/lib64/nagios/plugins
+%endif
 
 %changelog
-* Wed Oct 17 2012 Mark Clarkson <mark.clarkson@smorg.co.uk>
-- Updated from upstream.
 * Mon May 23 2005 Sean Finney <seanius@seanius.net> - cvs head
 - just include the nagios plugins directory, which will automatically include
   all generated plugins (which keeps the build from failing on systems that
